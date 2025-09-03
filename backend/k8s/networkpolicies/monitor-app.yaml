@@ -1,0 +1,61 @@
+# Allows: Ingress from flask-app, deployer-app, and nginx (for web UI), Egress to MySQL
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: flask-monitor-netpol
+  namespace: ashapp
+spec:
+  podSelector:
+    matchLabels:
+      app: flask-monitor
+  policyTypes:
+  - Ingress
+  - Egress
+  
+  ingress:
+  # Allow ingress from flask-app for logging (log_to_monitor calls)
+  - from:
+    - podSelector:
+        matchLabels:
+          app: flask-app
+    ports:
+    - protocol: TCP
+      port: 6000
+  
+  # Allow ingress from deployer-app for logging (log_to_monitor calls)
+  - from:
+    - podSelector:
+        matchLabels:
+          app: deployer-app
+    ports:
+    - protocol: TCP
+      port: 6000
+  
+  # Allow ingress from nginx for web UI access (/monitor route in ingress.yaml)
+  - from:
+    - namespaceSelector: {}
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 6000
+  
+  egress:
+  # Allow egress to MySQL database (MYSQL_URI in database/app.py)
+  - to:
+    - podSelector:
+        matchLabels:
+          app: mysql
+    ports:
+    - protocol: TCP
+      port: 3306
+  
+  # Allow DNS resolution for mysql.ashapp.svc.cluster.local
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
