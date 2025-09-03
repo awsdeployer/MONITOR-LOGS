@@ -23,13 +23,6 @@ jobs:
         with:
           version: 'v1.27.0'
 
-      - name: Apply Namespace
-        run: |
-          cd backend/k8s
-          kubectl apply -f namespace.yaml
-          echo "Namespace applied"
-          kubectl get ns
-
       - name: Apply Secrets
         run: |
           cd backend/k8s
