@@ -1,27 +1,26 @@
+# ================================
+# PersistentVolume for MySQL
+# ================================
 apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: mysql-pv
-  namespace: ashapp
 spec:
   capacity:
     storage: 5Gi
   accessModes:
     - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Delete   # Auto-cleanup when PVC is deleted
-  hostPath:                                # For testing (on your node)
+  persistentVolumeReclaimPolicy: Delete   # auto-cleanup when PVC is deleted
+  hostPath:                                # local path on node
     path: /mnt/data/mysql
   storageClassName: mysql-storage-class
 ---
-apiVersion: v1
-kind: PersistentVolumeClaim
+# ================================
+# StorageClass (optional, if not exists)
+# ================================
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
 metadata:
-  name: mysql-pvc
-  namespace: ashapp
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 5Gi
-  storageClassName: mysql-storage-class
+  name: mysql-storage-class
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
