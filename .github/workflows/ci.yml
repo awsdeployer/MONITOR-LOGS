@@ -70,7 +70,7 @@ jobs:
       # Save Git SHA to repo (optional, helps CD know what was built)
       - name: Save Git SHA
         run: |
-          echo "${{ env.GIT_SHA }}" > backend/database/GIT_SHA.txt
+          echo "${{ env.GIT_SHA }}" > backend/GIT_SHA.txt
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add backend/database/GIT_SHA.txt
