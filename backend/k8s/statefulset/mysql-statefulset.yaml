@@ -1,3 +1,5 @@
+# MySQL StatefulSet
+# ================================
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -54,3 +56,20 @@ spec:
         requests:
           storage: 5Gi
       storageClassName: mysql-storage-class
+---
+# ================================
+# MySQL Headless Service
+# Needed for StatefulSet
+# ================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: ashapp
+spec:
+  ports:
+  - port: 3306
+    name: mysql
+  clusterIP: None
+  selector:
+    app: mysql
