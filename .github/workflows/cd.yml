@@ -60,7 +60,6 @@ jobs:
       # Rollout restart to ensure pods pick new image
       - name: Rollout Restart
         run: |
-          kubectl rollout restart deployment/flask-monitor -n ashapp
           kubectl rollout status deployment/flask-monitor -n ashapp
 
       - name: Apply Services
