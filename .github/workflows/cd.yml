@@ -54,7 +54,7 @@ jobs:
         run: |
           cd backend/k8s/deployment
           kubectl set image deployment/flask-monitor \
-            deployer-app=${{ secrets.DOCKER_HUB_USERNAME }}/flask-monitor:${{ env.GIT_SHA }} \
+            flask-monitor=${{ secrets.DOCKER_HUB_USERNAME }}/flask-monitor:${{ env.GIT_SHA }} \
             -n ashapp
 
       # Rollout restart to ensure pods pick new image
