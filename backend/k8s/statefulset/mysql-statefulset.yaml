@@ -1,5 +1,3 @@
-# MySQL StatefulSet
-# ================================
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -19,20 +17,12 @@ spec:
       containers:
       - name: mysql
         image: mysql:8.1
-        ports:
-        - containerPort: 3306
-          name: mysql
         env:
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:
             secretKeyRef:
               name: mysql-secret
               key: MYSQL_ROOT_PASSWORD
-        - name: MYSQL_DATABASE
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: MYSQL_DATABASE
         - name: MYSQL_USER
           valueFrom:
             secretKeyRef:
@@ -43,9 +33,23 @@ spec:
             secretKeyRef:
               name: mysql-secret
               key: MYSQL_PASSWORD
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: MYSQL_DATABASE
+        ports:
+        - containerPort: 3306
         volumeMounts:
         - name: mysql-storage
           mountPath: /var/lib/mysql
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1"
   volumeClaimTemplates:
   - metadata:
       name: mysql-storage
@@ -55,21 +59,17 @@ spec:
       resources:
         requests:
           storage: 5Gi
-      storageClassName: mysql-storage-class
+      storageClassName: ""   # match your PV if using static provisioning
 ---
-# ================================
-# MySQL Headless Service
-# Needed for StatefulSet
-# ================================
 apiVersion: v1
 kind: Service
 metadata:
   name: mysql
   namespace: ashapp
 spec:
-  ports:
-  - port: 3306
-    name: mysql
-  clusterIP: None
   selector:
     app: mysql
+  ports:
+  - port: 3306
+    targetPort: 3306
+  clusterIP: None   # Required for StatefulSet DNS
