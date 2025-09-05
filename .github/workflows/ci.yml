@@ -1,4 +1,4 @@
-name: CI - Docker Build & Push
+name: CI - Docker Build & Push (Flask Monitor)
 
 on:
   push:
@@ -9,12 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  # ======================
-  # Flask Monitor
-  # ======================
   flask-monitor:
-    # Prevent infinite loop: don’t run if commit is from the GitHub Actions bot
-    if: github.actor != 'github-actions[bot]'
     runs-on: self-hosted
     env:
       DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
