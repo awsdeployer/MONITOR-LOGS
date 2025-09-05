@@ -13,6 +13,8 @@ jobs:
   # Flask Monitor
   # ======================
   flask-monitor:
+    # Prevent infinite loop: don’t run if commit is from the GitHub Actions bot
+    if: github.actor != 'github-actions[bot]'
     runs-on: self-hosted
     env:
       DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
@@ -72,7 +74,7 @@ jobs:
         run: |
           sed -i "s|image:.*flask-monitor.*|image: ${{ env.DOCKER_HUB_USERNAME }}/flask-monitor:${{ env.GIT_SHA }}|" backend/k8s/deployment/monitor-deployment.yaml
 
-      # Commit & Push updated manifest
+      # Commit & Push updated manifest (with [skip ci])
       - name: Commit and Push Deployment Update
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -80,5 +82,5 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add backend/k8s/deployment/monitor-deployment.yaml
-          git diff --staged --quiet || git commit -m "Update flask-monitor image to ${{ env.GIT_SHA }}"
+          git diff --staged --quiet || git commit -m "Update flask-monitor image to ${{ env.GIT_SHA }} [skip ci]"
           git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
