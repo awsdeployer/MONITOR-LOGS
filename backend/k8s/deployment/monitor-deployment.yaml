@@ -16,7 +16,7 @@ spec:
       serviceAccountName: monitor-sa
       containers:
       - name: flask-monitor
-        image: ashwanth01/flask-monitor:6a1aebe0abed605536046f704399210edee67303
+        image: ashwanth01/flask-monitor:be82da4c7e824e4131ba12a3ae098c4717372010
         ports:
         - containerPort: 6000
         env:
