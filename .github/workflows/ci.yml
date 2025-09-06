@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  MONITOR-LOGS-MICROSERVICE:
+  MONITOR-LOGS-MICROSERVICE-CI:
     runs-on: self-hosted
     env:
       DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
