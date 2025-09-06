@@ -1,4 +1,4 @@
-name: CI - Docker Build & Push (Flask Monitor)
+name: CI - Docker Build & Push (MONITOR-LOGS)
 
 on:
   push:
