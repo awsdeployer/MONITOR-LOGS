@@ -1,4 +1,4 @@
-name: CI - Docker Build & Push (MONITOR-LOGS)
+name: CI - Docker Build & Push (MONITOR-LOGS-MICROSERVICE)
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  flask-monitor:
+  MONITOR-LOGS-MICROSERVICE:
     runs-on: self-hosted
     env:
       DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
