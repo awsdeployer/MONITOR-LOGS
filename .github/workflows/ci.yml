@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-    # Ignore pushes that contain [skip ci] in the commit message
     paths-ignore:
       - 'backend/k8s/deployment/monitor-deployment.yaml'
 
@@ -22,7 +21,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0   # needed for rebase/push
+          fetch-depth: 0
 
       - name: Linting (Flake8)
         run: pip install flake8 && flake8 backend/database || true
@@ -69,24 +68,22 @@ jobs:
           exit-code: 0
         continue-on-error: true
 
-      # Update Deployment YAML with new image tag
+      # ======================
+      # Update Deployment YAML
+      # ======================
       - name: Update Deployment manifest
         run: |
           sed -i "s|image:.*flask-monitor.*|image: ${{ env.DOCKER_HUB_USERNAME }}/flask-monitor:${{ env.GIT_SHA }}|" backend/k8s/deployment/monitor-deployment.yaml
 
-      # Commit & Push updated manifest (with [skip ci] to avoid loop)
-      - name: Commit and Push Deployment Update
+      - name: Commit & Push Deployment Update
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
-          git fetch origin main
-          git checkout main
-
           git add backend/k8s/deployment/monitor-deployment.yaml
-          git commit -m "Update flask-monitor image to ${{ env.GIT_SHA }} [skip ci]" || echo "No changes to commit"
+          git diff --staged --quiet || git commit -m "Update flask-monitor image to ${{ env.GIT_SHA }} [skip ci]"
 
-          git pull --rebase origin main
-          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git main
+          # Push directly to same branch, avoids rebase conflicts
+          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
