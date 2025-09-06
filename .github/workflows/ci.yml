@@ -86,4 +86,4 @@ jobs:
           git diff --staged --quiet || git commit -m "Update flask-monitor image to ${{ env.GIT_SHA }} [skip ci]"
 
           # Push directly to same branch, avoids rebase conflicts
-          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
+          git push --force https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
