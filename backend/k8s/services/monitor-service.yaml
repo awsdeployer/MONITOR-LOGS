@@ -11,3 +11,4 @@ spec:
       port: 6000
       targetPort: 6000
   type: ClusterIP
+
