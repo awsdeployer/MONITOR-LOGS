@@ -1,8 +1,8 @@
-name: CD - Kubernetes Deploy
+name: CD - MONITOR-LOGS-MICROSERVICE
 
 on:
   workflow_run:
-    workflows: ["CI - Docker Build & Push (MONITOR-LOGS)"]
+    workflows: ["CI - Docker Build & Push (MONITOR-LOGS-MICROSERVICE)"]
     types:
       - completed
 
@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+  MONITOR-LOGS-MICROSERVICE:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: self-hosted
 
