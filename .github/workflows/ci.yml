@@ -1,7 +1,7 @@
 name: CI - Docker Build & Push (MONITOR-LOGS-MICROSERVICE)
 
 on:
-  push:
+  #push:
     branches:
       - main
     paths-ignore:
