@@ -41,7 +41,7 @@ jobs:
 
       - name: Deployment Image
         run: |
-          cd backend/k8s/deployment
+          cd backend/k8s
           kubectl apply -f deployment/
           
 
