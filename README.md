@@ -8,200 +8,167 @@ Here are some working screenshots of the project:
 ![Screenshot 1](working-ss/1.png)
 
 
-mysql-pv.yml
+## Overview
 
+MONITOR-LOGS-MICROSERVICE is a microservice designed to collect, store, and visualize user activity logs from various services in a cloud-native environment. It provides RESTful APIs for logging actions and a web interface for viewing logs. The service is built with Flask, uses MySQL for storage, and is fully containerized and orchestrated with Kubernetes.
 
-
-
-
-# ================================
-# PersistentVolume for MySQL
-# ================================
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: mysql-pv
-spec:
-  capacity:
-    storage: 5Gi
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Delete   # auto-cleanup when PVC is deleted
-  hostPath:                                # local path on node
-    path: /mnt/data/mysql
-  storageClassName: mysql-storage-class
 ---
-# ================================
-# StorageClass (optional, if not exists)
-# ================================
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: mysql-storage-class
-provisioner: kubernetes.io/no-provisioner
-volumeBindingMode: WaitForFirstConsumer
 
+## Features
+- Centralized logging of user actions from multiple services
+- REST API for log ingestion
+- Web UI for log visualization
+- MySQL-backed persistent storage
+- Kubernetes manifests for deployment, scaling, and security
+- Dockerized for easy local and cloud deployment
 
-
-
-mysql-statefulset.yml
-
-# MySQL StatefulSet
-# ================================
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: mysql
-  namespace: ashapp
-spec:
-  serviceName: mysql
-  replicas: 1
-  selector:
-    matchLabels:
-      app: mysql
-  template:
-    metadata:
-      labels:
-        app: mysql
-    spec:
-      containers:
-      - name: mysql
-        image: mysql:8.1
-        ports:
-        - containerPort: 3306
-          name: mysql
-        env:
-        - name: MYSQL_ROOT_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: MYSQL_ROOT_PASSWORD
-        - name: MYSQL_DATABASE
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: MYSQL_DATABASE
-        - name: MYSQL_USER
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: MYSQL_USER
-        - name: MYSQL_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: MYSQL_PASSWORD
-        volumeMounts:
-        - name: mysql-storage
-          mountPath: /var/lib/mysql
-  volumeClaimTemplates:
-  - metadata:
-      name: mysql-storage
-    spec:
-      accessModes:
-      - ReadWriteOnce
-      resources:
-        requests:
-          storage: 5Gi
-      storageClassName: mysql-storage-class
 ---
-# ================================
-# MySQL Headless Service
-# Needed for StatefulSet
-# ================================
-apiVersion: v1
-kind: Service
-metadata:
-  name: mysql
-  namespace: ashapp
-spec:
-  ports:
-  - port: 3306
-    name: mysql
-  clusterIP: None
-  selector:
-    app: mysql
 
+## Architecture & Workflow
 
+```
+          +-------------------+
+          |  Client Services  |
+          | (flask-app, etc.) |
+          +--------+----------+
+                   |
+                   | POST /monitor/log
+                   v
+          +-----------------------+
+          |  Flask Monitor App    |
+          |  (REST API & Web UI)  |
+          +----------+------------+
+                     |
+                     | SQL (ORM)
+                     v
+          +-----------------------+
+          |      MySQL DB         |
+          +-----------------------+
+```
 
-DOCKER_HUB_USERNAME
+### Sequence (UML) Diagram (PlantUML)
+```plantuml
+@startuml
+actor Client
+participant "Flask Monitor API" as API
+database MySQL
 
-DOCKER_HUB_ACCESS_TOKEN
+Client -> API: POST /monitor/log (user action)
+API -> MySQL: INSERT user_actions
+Client -> API: GET /monitor (view logs)
+API -> MySQL: SELECT user_actions
+API -> Client: Rendered HTML table
+@enduml
+```
 
+---
 
+## API Endpoints
 
+### 1. Log User Action
+- **POST** `/monitor/log`
+  - **Body (JSON):**
+    - `user_id` (string)
+    - `service` (string)
+    - `endpoint` (string)
+    - `action_type` (string)
+    - `request_data` (object)
+    - `response_summary` (string)
+    - `ip_address` (string)
+    - `user_agent` (string)
+  - **Response:** `{ "success": true }`
 
-kubectl get namespace ashapp -o json > ashapp-latest.json
+### 2. View Logs (Web UI)
+- **GET** `/monitor`
+  - Renders an HTML table of the latest 200 user actions.
 
-nano ashapp-latest.json
+---
 
-make like this: -
-"spec": {
-  "finalizers": []
-}
+## Database Schema
 
-kubectl replace --raw "/api/v1/namespaces/ashapp/finalize" -f ./ashapp-latest.json
+Table: `user_actions`
 
-kubectl get ns
+| id | timestamp | user_id | service | endpoint | action_type | request_data | response_summary | ip_address | user_agent |
+|----|-----------|---------|---------|----------|-------------|--------------|------------------|------------|------------|
 
-rm ashapp-latest.json
+---
 
-cd backend
+## Running Locally (Docker)
 
-docker build -t ashwanth01/flask-app:latest .
+1. **Clone the repository:**
+   ```bash
+   git clone <repo-url>
+   cd MONITOR-LOGS-MICROSERVICE
+   ```
+2. **Build the Docker image:**
+   ```bash
+   cd backend/database
+   docker build -t flask-monitor:latest .
+   ```
+3. **Run MySQL (example):**
+   ```bash
+   docker run --name mysql -e MYSQL_ROOT_PASSWORD=rootpass -e MYSQL_DATABASE=ashdb -p 3306:3306 -d mysql:8.1
+   ```
+4. **Run the Flask Monitor app:**
+   ```bash
+   docker run --name flask-monitor --link mysql:mysql -e MYSQL_URI="mysql+pymysql://root:rootpass@mysql:3306/ashdb" -p 6000:6000 flask-monitor:latest
+   ```
+5. **Access the Web UI:**
+   - Open [http://localhost:6000/monitor](http://localhost:6000/monitor)
 
-docker push ashwanth01/flask-app:latest
+---
 
+## Kubernetes Deployment
 
-docker build -t ashwanth01/deployer-app:latest -f deployer-dockerfile .
+1. **Set up Kubernetes cluster and context**
+2. **Apply secrets:**
+   ```bash
+   kubectl apply -f backend/k8s/secrets/
+   ```
+3. **Deploy MySQL StatefulSet:**
+   ```bash
+   kubectl apply -f backend/k8s/statefulset/
+   ```
+4. **Deploy Flask Monitor:**
+   ```bash
+   kubectl apply -f backend/k8s/deployment/
+   kubectl apply -f backend/k8s/services/
+   ```
+5. **Apply network policies, HPA, and RBAC:**
+   ```bash
+   kubectl apply -f backend/k8s/networkpolicies/
+   kubectl apply -f backend/k8s/hpa/
+   kubectl apply -f backend/k8s/rbac/ --recursive
+   ```
+6. **Access the service:**
+   - Use `kubectl port-forward svc/flask-monitor 6000:6000 -n ashapp` and open [http://localhost:6000/monitor](http://localhost:6000/monitor)
 
-docker push ashwanth01/deployer-app:latest
+---
 
+## Requirements
 
-cd history-services
+- Python 3.12 (for Docker build)
+- Flask, Flask-SQLAlchemy, PyMySQL
+- MySQL 8.x
+- Docker
+- Kubernetes (v1.21+ recommended)
 
-docker build -t ashwanth01/history-service:latest .
+---
 
-docker push ashwanth01/history-service:latest
+## Contributing
 
+Contributions are welcome! Please open issues or submit pull requests for improvements, bug fixes, or new features.
 
-cd ../database
+---
 
-docker build -t ashwanth01/flask-monitor:latest .
+## License
 
-docker push ashwanth01/flask-monitor:latest
+This project is licensed under the MIT License.
 
+---
 
-cd ../history-service
+## Maintainer & Contact
 
-docker build -t ashwanth01/history-service:latest .
-
-docker push ashwanth01/history-service:latest
-
-
-
-docker build -t ashwanth01/ashapp-backend:latest .
-
-docker run -d --name ashapp-backend \
-  -p 5000:5000 \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  -v $(which docker):/usr/bin/docker \
-  -v $(which kubectl):/usr/bin/kubectl \
-  -v $HOME/.kube:/home/appuser/.kube \
-  -e KUBECONFIG=/home/appuser/.kube/config \
-  --user root \
-  ashwanth01/ashapp-backend:latest
-
-
-
-
-
-
-docker buildx build --platform linux/amd64 -t ashwanth01/history-service:latest .
-
-
-
-
-
+- GitHub: [awsdeployer](https://github.com/awsdeployer)
 
 
