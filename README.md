@@ -155,20 +155,4 @@ Table: `user_actions`
 
 ---
 
-## Contributing
-
-Contributions are welcome! Please open issues or submit pull requests for improvements, bug fixes, or new features.
-
----
-
-## License
-
-This project is licensed under the MIT License.
-
----
-
-## Maintainer & Contact
-
-- GitHub: [awsdeployer](https://github.com/awsdeployer)
-
 
