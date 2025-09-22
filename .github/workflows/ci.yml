@@ -58,7 +58,6 @@ jobs:
         run: |
           cd backend/database
           docker build -t ${{ env.DOCKER_HUB_USERNAME }}/flask-monitor:${{ env.GIT_SHA }} .
-          docker push ${{ env.DOCKER_HUB_USERNAME }}/flask-monitor:${{ env.GIT_SHA }}
 
       - name: Image Scan (Trivy - Flask Monitor)
         uses: aquasecurity/trivy-action@master
@@ -66,7 +65,7 @@ jobs:
           image-ref: ${{ env.DOCKER_HUB_USERNAME }}/flask-monitor:${{ env.GIT_SHA }}
           format: table
           exit-code: 0
-          scanners: secret
+          #scanners: secret
         continue-on-error: true
 
       - name: Image Push Flask Monitor
