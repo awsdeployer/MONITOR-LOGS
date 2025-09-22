@@ -33,16 +33,16 @@ jobs:
         run: flake8 backend/database || true
         continue-on-error: true
 
+      - name: Unit Tests (pytest)
+        run: pytest backend/database/tests || true
+        continue-on-error: true
+
       - name: SAST (CodeQL Analysis)
         uses: github/codeql-action/analyze@v2
         continue-on-error: true
 
       - name: SCA (Safety)
         run: safety check -r backend/database/requirements.txt || true
-        continue-on-error: true
-
-      - name: Unit Tests (pytest)
-        run: pytest backend/database/tests || true
         continue-on-error: true
 
       - name: DAST (OWASP ZAP Baseline Scan)
@@ -60,7 +60,7 @@ jobs:
           username: ${{ env.DOCKER_HUB_USERNAME }}
           password: ${{ env.DOCKER_HUB_ACCESS_TOKEN }}
 
-      - name: Build & Push Flask Monitor
+      - name: Image Build Flask Monitor
         run: |
           cd backend/database
           docker build -t ${{ env.DOCKER_HUB_USERNAME }}/flask-monitor:${{ env.GIT_SHA }} .
@@ -73,6 +73,10 @@ jobs:
           format: table
           exit-code: 0
         continue-on-error: true
+
+      - name: Image Push Flask Monitor
+        run: |
+          docker push ${{ env.DOCKER_HUB_USERNAME }}/flask-monitor:${{ env.GIT_SHA }}
 
       # ======================
       # Update Deployment YAML
